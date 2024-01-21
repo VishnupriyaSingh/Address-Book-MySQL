@@ -1,6 +1,7 @@
 package com.day16;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 class Contact implements Comparable<Contact> {
     public String firstName;
@@ -98,15 +99,23 @@ class AddressBook {
         return false;
     }
 
+    //UC7
+    // public boolean isDuplicate(Contact newContact) {
+    //     for (Contact contact : contacts) {
+    //         if (contact.getFirstName().equalsIgnoreCase(newContact.getFirstName()) &&
+    //                 contact.getLastName().equalsIgnoreCase(newContact.getLastName())) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
+
     public boolean isDuplicate(Contact newContact) {
-        for (Contact contact : contacts) {
-            if (contact.getFirstName().equalsIgnoreCase(newContact.getFirstName()) &&
-                    contact.getLastName().equalsIgnoreCase(newContact.getLastName())) {
-                return true;
-            }
-        }
-        return false;
+        return contacts.stream()
+                       .anyMatch(contact -> contact.getFirstName().equalsIgnoreCase(newContact.getFirstName()) &&
+                                            contact.getLastName().equalsIgnoreCase(newContact.getLastName()));
     }
+    
 
     public void editContact(String firstName, Contact updatedContact) {
         for (int i = 0; i < contacts.size(); i++) {
@@ -162,18 +171,24 @@ class AddressBook {
         Collections.sort(contacts);
     }
 
+    //UC12
     public void sortContactsByCity() {
-        Collections.sort(contacts, Comparator.comparing(Contact::getCity));
+        contacts = contacts.stream()
+                           .sorted((c1, c2) -> c1.getCity().compareToIgnoreCase(c2.getCity()))
+                           .collect(Collectors.toList());
     }
 
     public void sortContactsByState() {
-        Collections.sort(contacts, Comparator.comparing(Contact::getState));
-    }
+        contacts = contacts.stream()
+                           .sorted((c1, c2) -> c1.getState().compareToIgnoreCase(c2.getState()))
+                           .collect(Collectors.toList());
+    }    
 
     public void sortContactsByZip() {
-        Collections.sort(contacts, Comparator.comparing(Contact::getZip));
-    }
-
+        contacts = contacts.stream()
+                           .sorted((c1, c2) -> c1.getZip().compareTo(c2.getZip()))
+                           .collect(Collectors.toList());
+    }    
 }
 
 class AddressBookManager {
@@ -211,21 +226,36 @@ class AddressBookManager {
         }
     }
 
+    //UC8
+    // public List<Contact> searchByCity(String city) {
+    //     List<Contact> foundContacts = new ArrayList<>();
+    //     for (AddressBook addressBook : addressBookMap.values()) {
+    //         foundContacts.addAll(addressBook.getContactsByCity(city));
+    //     }
+    //     return foundContacts;
+    // }
     public List<Contact> searchByCity(String city) {
-        List<Contact> foundContacts = new ArrayList<>();
-        for (AddressBook addressBook : addressBookMap.values()) {
-            foundContacts.addAll(addressBook.getContactsByCity(city));
-        }
-        return foundContacts;
-    }
+        return addressBookMap.values().stream()
+                             .flatMap(addressBook -> addressBook.contacts.stream())
+                             .filter(contact -> contact.getCity().equalsIgnoreCase(city))
+                             .collect(Collectors.toList());
+    }    
+    
 
+    // public List<Contact> searchByState(String state) {
+    //     List<Contact> foundContacts = new ArrayList<>();
+    //     for (AddressBook addressBook : addressBookMap.values()) {
+    //         foundContacts.addAll(addressBook.getContactsByState(state));
+    //     }
+    //     return foundContacts;
+    // }
     public List<Contact> searchByState(String state) {
-        List<Contact> foundContacts = new ArrayList<>();
-        for (AddressBook addressBook : addressBookMap.values()) {
-            foundContacts.addAll(addressBook.getContactsByState(state));
-        }
-        return foundContacts;
-    }
+        return addressBookMap.values().stream()
+                             .flatMap(addressBook -> addressBook.contacts.stream())
+                             .filter(contact -> contact.getState().equalsIgnoreCase(state))
+                             .collect(Collectors.toList());
+    }    
+    
 
     public void viewPersonsByCity(String city) {
         List<Contact> contacts = cityToContactsMap.getOrDefault(city, Collections.emptyList());
@@ -508,11 +538,18 @@ public class Main {
         }
     }
 
-    public static void sortAddressBookByName(Scanner scanner, AddressBook addressBook) {
-        addressBook.sortContactsByName();
-        System.out.println("Address Book sorted by name:");
-        addressBook.viewContacts();
+    //UC11
+    // public static void sortAddressBookByName(Scanner scanner, AddressBook addressBook) {
+    //     addressBook.sortContactsByName();
+    //     System.out.println("Address Book sorted by name:");
+    //     addressBook.viewContacts();
+    // }
+    public static void sortContactsByName(AddressBook addressBook) {
+        Collections.sort(addressBook.contacts, Comparator.comparing(Contact::getFirstName)
+                                                         .thenComparing(Contact::getLastName));
     }
+       
+    
 
     public static void sortAddressBook(Scanner scanner, AddressBook addressBook) {
         System.out.println("Choose an option: \n1. Sort by Name \n2. Sort by City \n3. Sort by State \n4. Sort by Zip");
